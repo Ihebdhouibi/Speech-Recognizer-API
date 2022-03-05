@@ -9,24 +9,27 @@ logger = logging.getLogger(__name__)
 MINILIBRI_TRAIN_URL = "http://www.openslr.org/resources/31/train-clean-5.tar.gz"
 MINILIBRI_VALID_URL = "http://www.openslr.org/resources/31/dev-clean-2.tar.gz"
 MINILIBRI_TEST_URL = "https://www.openslr.org/resources/12/test-clean.tar.gz"
-SAMPLERATE = 1600
+SAMPLERATE = 16000
+
 
 # skip data preparation if already done
-def skip(*filenames):
+def skip(*filenames: tuple):
     for filename in filenames:
         if not os.path.isfile(filename):
             return False
     return True
 
+
 # check dataset downloaded or not
-def check_folders(*folders):
+def check_folders(*folders: tuple):
     for folder in folders:
         if not os.path.exists(folder):
             return False
     return True
 
+
 # download dataset
-def download_mini_librispeech(destination):
+def download_mini_librispeech(destination: str):
     train_archive = os.path.join(destination, "train-clean-5.tar.gz")
     valid_archive = os.path.join(destination, "dev-clean-2.tar.gz")
     test_archive = os.path.join(destination, "test-clean.tar.gz")
@@ -39,8 +42,9 @@ def download_mini_librispeech(destination):
     shutil.unpack_archive(valid_archive, destination)
     shutil.unpack_archive(test_archive, destination)
 
+
 # returns transcription of each sentence in the dataset
-def get_transcription(trans_list):
+def get_transcription(trans_list: list[str]):
     trans_dict = {}
     for trans_file in trans_list:
         with open(trans_file) as f:
@@ -53,8 +57,9 @@ def get_transcription(trans_list):
     logger.info("Transcription files read!")
     return trans_dict
 
+
 # create json files
-def create_json(wav_list, trans_dict, json_file):
+def create_json(wav_list: list[str], trans_dict: dict[int | str, str], json_file: str):
     json_dict = {}
     for wav_file in wav_list:
         # retreiving the duration through reading the signal, duration in seconds
@@ -79,8 +84,9 @@ def create_json(wav_list, trans_dict, json_file):
 
     logger.info(f"{json_file} successfully created")
 
+
 def prepare_mini_librispeech(
-        data_folder, save_json_train, save_json_valid, save_json_test
+        data_folder: str, save_json_train: str, save_json_valid: str, save_json_test: str
 ):
     # Checking if data prepation is already done
     if skip(save_json_train, save_json_valid, save_json_test):

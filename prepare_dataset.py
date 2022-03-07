@@ -8,7 +8,7 @@ from speechbrain.dataio.dataio import read_audio
 logger = logging.getLogger(__name__)
 MINILIBRI_TRAIN_URL = "http://www.openslr.org/resources/31/train-clean-5.tar.gz"
 MINILIBRI_VALID_URL = "http://www.openslr.org/resources/31/dev-clean-2.tar.gz"
-MINILIBRI_TEST_URL = "https://www.openslr.org/resources/12/test-clean.tar.gz"
+MINILIBRI_TEST_URL = "http://www.openslr.org/resources/12/test-clean.tar.gz"
 SAMPLERATE = 16000
 
 
@@ -59,7 +59,7 @@ def get_transcription(trans_list: list[str]):
 
 
 # create json files
-def create_json(wav_list: list[str], trans_dict: dict[int | str, str], json_file: str):
+def create_json(wav_list: list[str], trans_dict, json_file: str):
     json_dict = {}
     for wav_file in wav_list:
         # retreiving the duration through reading the signal, duration in seconds
@@ -121,3 +121,4 @@ def prepare_mini_librispeech(
     create_json(wav_list_train, trans_dict, save_json_train)
     create_json(wav_list_valid, trans_dict, save_json_valid)
     create_json(wav_list_test, trans_dict, save_json_test)
+

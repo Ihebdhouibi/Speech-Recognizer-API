@@ -1,0 +1,15 @@
+# Path where the trained tokenizer will be saved
+output_folder : "dataset/tokenizer"
+
+# Tokinizer parameters
+token_output: 1000
+token_type: "unigram" # OPTIONS : ["unigram", "bpe", "char"]
+character_coverage: 1.0
+annotation_read: "words" # field to read
+
+# Path where data specification json files are stored
+train_annotation: "dataset/specification/train.json"
+valid_annotation: "dataset/specification/valid.json"
+test_annotation: "dataset/specification/test.json"
+
+

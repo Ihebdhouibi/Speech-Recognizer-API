@@ -41,9 +41,9 @@ class Tokenizer:
 
 
 # Testing the tekonizer
-import sentencepiece as spm
-sp = spm.SentencePieceProcessor()
-sp.load("dataset/tokenizer/1000_unigram.model")
+#import sentencepiece as spm
+#sp = spm.SentencePieceProcessor()
+#sp.load("dataset/tokenizer/1000_unigram.model")
 
-print(sp.encode_as_pieces('The city of Tunis'))
+#print(sp.encode_as_pieces('The city of Tunis'))
 

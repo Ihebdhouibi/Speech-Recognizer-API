@@ -1,8 +1,12 @@
 from fastapi import FastAPI
+
+# local imports
 from prepare_dataset import prepare_mini_librispeech, skip
 from tokenizer import Tokenizer
-
+from language_model import LM
 app = FastAPI()
+
+
 @app.get("/")
 async def root():
     try:
@@ -18,10 +22,16 @@ async def root():
             Tk = Tokenizer()
             Tk.run()
         except Exception as e:
-            print("There had been an error training the tokenizer "+ str(e))
+            print("There had been an error training the tokenizer " + str(e))
 
     else:
         print("Tokenizer already trained")
 
-    return {"message": "API Created successfully !!!"}
+    try:
+        language_model = LM()
+        language_model.run()
+    except Exception as e:
+        print("There has been an error while training the Language model " + str(e))
 
+
+    return {"message": "API Created successfully !!!"}

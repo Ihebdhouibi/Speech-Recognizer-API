@@ -1,0 +1,101 @@
+
+seed: 2602
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: "dataset/RNNLM/"
+save_folder: "dataset/RNNLM/save"
+train_log: "dataset/RNNLM/train_log.txt"
+
+# Text corpora for training, validation and test
+lm_train_data: "dataset/data/train.txt"
+lm_valid_data: "dataset/data/valid.txt"
+lm_test_data: "dataset/data/test.txt"
+
+# Train logger statistics
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_log>
+
+
+# Tokenizer model
+tokenizer_file: "dataset/tokenizer/1000_unigram.model"
+
+# Training parameters
+number_of_epochs: 20
+batch_size: 80
+lr: 0.001
+accu_steps: 1 # gradient accumulation to simulate large batch training
+ckpt_interval_minutes: 15 # Save checkpoints every N minutes
+
+# Dataloader options
+train_dataloader_opts:
+    batch_size: !ref <batch_size>
+    shuffle: True
+
+valid_dataloader_opts:
+    batch_size: 1
+
+test_dataloader_opts:
+    batch_size: 1
+
+# Model parameters
+emb_dim: 256 # dimension of the embeddings
+rnn_size: 512 # dimension of the hidden layers
+layers: 2 # number of hidden layers
+
+# Outputs
+output_neurons: 1000 # index(eos/bos) = 0
+blank_index: 0
+bos_index: 0
+eos_index: 0
+
+# Model
+model: !new:custom_model.CustomModel
+    embedding_dim: !ref <emb_dim>
+    rnn_size: !ref <rnn_size>
+    layers: !ref <layers>
+
+# cost function used for training the model
+compute_cost: !name:speechbrain.nnet.losses.nll_loss
+
+# Optimizer
+optimizer: !name:torch.optim.Adam
+    lr: !ref <lr>
+    betas: (0.9, 0.8)
+    eps: 0.000000001
+
+# This function manages learning rate annealing over the epochs.
+lr_annealing: !new:speechbrain.nnet.schedulers.NewBobScheduler
+    initial_value: !ref <lr>
+    improvement_threshold: 0.0025
+    annealing_factor: 0.8
+    patient: 0
+
+# The first object passed to the brain class is this "epoch counter"
+# which is saved by the checkpointer so that training can be resumed at any point
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <number_of_epochs>
+
+# objects in "modules" dict will have their parameters moved to the correct
+# device, as well as having train()/eval() called on them by the brain class
+modules:
+    model: !ref <model>
+
+# Tokenizer initialization
+tokenizer: !new:sentencepiece.SentencePieceProcessor
+
+# This object is used for saving the state of training both so that it can be resumed
+# if it gets interrupted, and also so that the best checkpoint can be later loaded for
+# evaluation or inference
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <model>
+        schedular: !ref <lr_annealing>
+        counter: !ref <epoch_counter>
+
+# pretrain the tokenizer
+pretainer: !new:speechbrain.utils.parameter_transfer.Pretrainer
+    loadables:
+        tokenizer: !ref <tokenizer>
+    paths:
+        tokenizer: !ref <tokenizer_file>
+

@@ -10,11 +10,12 @@ logger = logging.getLogger("Language model logger")
 
 class LM(sb.core.Brain):
 
-    hparams_file, run_opts, overrides = sb.parse_arguments(["language_model.yaml", '--device=cpu'])
+    hparams_file, run_opts, overrides = sb.parse_arguments(["language_model.yaml"])
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
 
-       def compute_forward(self, batch, stage):
+
+    def compute_forward(self, batch, stage):
         """
         Predicts next word given previous ones.
 

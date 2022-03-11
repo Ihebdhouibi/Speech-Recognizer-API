@@ -30,8 +30,7 @@ class ASR(sb.Brain):
             hyperparams_to_save=self.hparams_file,
             overrides=self.overrides,
         )
-        # Initialize ddp (useful only for multi-GPU DDP training)
-        sb.utils.distributed.ddp_init_group(self.run_opts)
+
 
         # to be run only once
         sb.utils.distributed.run_on_main(

@@ -8,8 +8,9 @@ from ASR import ASR
 app = FastAPI()
 
 
-@app.get("/")
-async def root():
+@app.get("/{audio_path}")
+async def root(audio_path: str):
+
     try:
         prepare_mini_librispeech("dataset/",
                                  "dataset/specification/train.json",
@@ -26,7 +27,7 @@ async def root():
             print("There had been an error training the tokenizer " + str(e))
 
     else:
-        print("Tokenizer already trained")
+        print("Tokenizer already trained.")
 
     if not skip("dataset/RNNLM/save/CKPT+2022-03-08+22-05-40+00/model.ckpt"):
         try:
@@ -34,6 +35,8 @@ async def root():
             language_model.run()
         except Exception as e:
             print("There has been an error while training the Language model " + str(e))
+    else:
+        print("Language model already trained.")
 
     try:
         asr = ASR()
@@ -41,4 +44,6 @@ async def root():
     except Exception as e:
         print("There had been an error training ASR " + str(e))
 
-    return {"message": "API Created successfully !!!"}
+    # Loading audio file to test
+
+    return {"message": "API Created successfully !!!"+str(audio_path)}

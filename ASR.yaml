@@ -5,7 +5,8 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 data_folder: dataset
 data_folder_rirs: !ref <data_folder>
 output_folder: !ref results/CRDNN_BPE_960h_LM/<seed>
-wer_file: !ref <output_folder>/save
+wer_file: !ref <output_folder>/wer.txt
+save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 
 # Language model pretraining
@@ -299,8 +300,7 @@ pretrainer: !new:speechbrain.utils.parameter_transfer.Pretrainer
     loadables:
         lm: !ref <lm_model>
         tokenizer: !ref <tokenizer>
-        model: !ref <model>
+
     paths:
         lm: !ref <lm_pretrained_path>
         tokenizer: !ref <tk_pretrained_path>
-        model: !ref <pretrained_path>/asr.ckpt

@@ -14,19 +14,7 @@ class LM(sb.core.Brain):
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
 
-    yaml_file = open("language_model.yaml")
-    parsed_yaml_file = load_hyperpyyaml(yaml_file)
-
-    model = parsed_yaml_file["model"]
-    compute_cost = parsed_yaml_file["compute_cost"]
-    accu_steps = parsed_yaml_file["accu_steps"]
-    lr_annealing = parsed_yaml_file["lr_annealing"]
-    train_logger = parsed_yaml_file["train_logger"]
-    epoch_counter = parsed_yaml_file["epoch_counter"]
-
-
-
-    def compute_forward(self, batch, stage):
+       def compute_forward(self, batch, stage):
         """
         Predicts next word given previous ones.
 
@@ -44,7 +32,7 @@ class LM(sb.core.Brain):
         """
         batch = batch.to(self.device)
         tokens_bos, _ = batch.tokens_bos
-        pred = self.model(tokens_bos)
+        pred = self.hparams["model"](tokens_bos)
         return pred
 
     def compute_objectives(self, predictions, batch, stage):
@@ -67,7 +55,7 @@ class LM(sb.core.Brain):
         """
         batch = batch.to(self.device)
         tokens_eos, tokens_len = batch.tokens_eos
-        loss = self.compute_cost(
+        loss = self.hparams["compute_cost"](
             predictions, tokens_eos, length=tokens_len
         )
         return loss
@@ -89,10 +77,10 @@ class LM(sb.core.Brain):
         loss = self.compute_objectives(predictions, batch, sb.Stage.TRAIN)
 
         # loss backpropagation (gradient computation)
-        (loss / self.accu_steps).backward()
+        (loss / self.hparams["accu_steps"]).backward()
 
         # Manage gradient accumulation
-        if self.step % self.accu_steps == 0:
+        if self.step % self.hparams["accu_steps"] == 0:
 
             # Gradient clipping & early stop if loss is not fini
             self.check_gradients(loss)
@@ -104,11 +92,11 @@ class LM(sb.core.Brain):
             self.optimizer.zero_grad()
 
             if isinstance(
-                self.lr_annealing, sb.nnet.schedulers.NoamScheduler
+                self.hparams["lr_annealing"], sb.nnet.schedulers.NoamScheduler
             ) or isinstance(
-                self.lr_annealing, sb.nnet.schedulers.CyclicCosineScheduler
+                self.hparams["lr_annealing"], sb.nnet.schedulers.CyclicCosineScheduler
             ):
-                self.lr_annealing(self.optimizer)
+                self.hparams["lr_annealing"](self.optimizer)
 
         return loss
 
@@ -140,11 +128,11 @@ class LM(sb.core.Brain):
         if stage == sb.Stage.VALID:
 
             # update the learning rate
-            old_lr, new_lr = self.lr_annealing(stage_loss)
+            old_lr, new_lr = self.hparams["lr_annealing"](stage_loss)
             sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr)
 
             # The train_logger write a summary to stdout and to the logfile
-            self.train_logger.log_stats(
+            self.hparams["train_logger"].log_stats(
                 {"Epoch": epoch},
                 train_stats={"loss": self.train_loss},
                 valid_stats=stats,
@@ -156,8 +144,8 @@ class LM(sb.core.Brain):
         # We also write statistics about test data to stdout and to the logfile
         if stage == sb.Stage.TEST:
 
-            self.train_logger.log_stats(
-                {"Epoch loaded": self.epoch_counter.current},
+            self.hparams["train_logger"].log_stats(
+                {"Epoch loaded": self.hparams["epoch_counter"].current},
                 test_stats=stats,
             )
 
@@ -236,8 +224,17 @@ class LM(sb.core.Brain):
         This function runs the previous function. The main function
         """
 
+        # Create experiment folder
+        sb.create_experiment_directory(
+            experiment_directory=self.hparams["output_folder"],
+            hyperparams_to_save=self.hparams_file,
+            overrides=self.overrides,
+        )
+
         # Create the dataset objects "train", "valid" and "test"
         train_data, valid_data, test_data = self.dataio_prepare(self.parsed_yaml_file)
+
+
 
         # initialize the Brain object to prepare for LM training
         lm_brain = LM(

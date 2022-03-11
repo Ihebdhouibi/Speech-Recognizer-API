@@ -15,7 +15,7 @@ logger = logging.getLogger("ASR Logger")
 # Brain class for speech recognition training
 class ASR(sb.Brain):
 
-    hparams_file, run_opts, overrides = sb.parse_arguments(["ASR.yaml", '--device=cpu'])
+    hparams_file, run_opts, overrides = sb.parse_arguments(["ASR.yaml"])
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
 
@@ -30,6 +30,8 @@ class ASR(sb.Brain):
             hyperparams_to_save=self.hparams_file,
             overrides=self.overrides,
         )
+        # Initialize ddp (useful only for multi-GPU DDP training)
+        sb.utils.distributed.ddp_init_group(self.run_opts)
 
         # to be run only once
         sb.utils.distributed.run_on_main(
@@ -50,7 +52,7 @@ class ASR(sb.Brain):
         # We download the pretrained LM from HuggingFace (or elsewhere depending on
         # the path given in the YAML file). The tokenizer is loaded at the same time.
         run_on_main(self.hparams["pretrainer"].collect_files)
-        self.hparams["pretrainer"].load_collected(device=self.run_opts["deivce"])
+        self.hparams["pretrainer"].load_collected(device=self.run_opts["device"])
 
         #Trainer initialization
         asr_brain = ASR(
@@ -109,7 +111,7 @@ class ASR(sb.Brain):
         # Embed tokens and pass tokens & encoded signal to decoder
         embedded_tokens = self.modules.embedding(tokens_bos)
         decoder_outputs, _ = self.modules.decoder(
-            embedded_tokens, encoded_signal, self.feats_lens
+            embedded_tokens, encoded_signal, self.feat_lens
         )
 
         # output layer for seq2seq log-probabilities

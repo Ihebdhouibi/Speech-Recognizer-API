@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from prepare_dataset import prepare_mini_librispeech, skip
 from tokenizer import Tokenizer
 from language_model import LM
+from ASR import ASR
 app = FastAPI()
 
 
@@ -27,11 +28,17 @@ async def root():
     else:
         print("Tokenizer already trained")
 
-    try:
-        language_model = LM()
-        language_model.run()
-    except Exception as e:
-        print("There has been an error while training the Language model " + str(e))
+    if not skip("dataset/RNNLM/save/CKPT+2022-03-08+22-05-40+00/model.ckpt"):
+        try:
+            language_model = LM()
+            language_model.run()
+        except Exception as e:
+            print("There has been an error while training the Language model " + str(e))
 
+    try:
+        asr = ASR()
+        asr.run()
+    except Exception as e:
+        print("There had been an error training ASR " + str(e))
 
     return {"message": "API Created successfully !!!"}

@@ -27,6 +27,7 @@ class CustomModel(torch.nn.Module):
         rnn_size=256,
         layers=2,
         output_dim=1000,
+        bidirectional=False,
         return_hidden=False,
     ):
         super().__init__()
@@ -42,7 +43,7 @@ class CustomModel(torch.nn.Module):
         self.rnn = torch.nn.LSTM(
             input_size=embedding_dim,
             hidden_size=rnn_size,
-            bidirectional=False,
+            bidirectional=bidirectional,
             num_layers=layers,
         )
 

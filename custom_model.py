@@ -27,6 +27,7 @@ class CustomModel(torch.nn.Module):
         rnn_size=256,
         layers=2,
         output_dim=1000,
+        bidirectional=False,
         return_hidden=False,
     ):
         super().__init__()
@@ -42,7 +43,7 @@ class CustomModel(torch.nn.Module):
         self.rnn = torch.nn.LSTM(
             input_size=embedding_dim,
             hidden_size=rnn_size,
-            bidirectional=False,
+            bidirectional=bidirectional,
             num_layers=layers,
         )
 
@@ -53,7 +54,19 @@ class CustomModel(torch.nn.Module):
         self.log_softmax = sb.nnet.activations.Softmax(apply_log=True)
 
     def forward(self, x, hx=None):
-        """List of computations from input to output predictions"""
+        """
+            List of computations from input to output predictions
+
+            hx: tuple(torch.tensor, torch.tensor), optional
+                A tuple containing the initial hidden state and cell state:
+                (h_0, c_0). Each should have shape:
+                (num_layers * num_direction, batch_size, hidden_size).
+                If None, zeros are used.
+            
+            return_hidden: bool
+                If True, returns a tuple (output, hidden), where hidden is a tuple (h_n, c_n)
+                containing the hidden state and cell state for the last time step.
+        """
         x = self.embedding(x)
 
         # If 2d tensor, add a time-axis
